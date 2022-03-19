@@ -35,7 +35,8 @@ class CreateApi( APIView ):
         post = request.data
         
         serializer = PostSerializer( data=post )
-
+        # print(serializer.is_valid(  ))
+        # print(serializer.errors)
         if serializer.is_valid(  ):
             info["obj"] = serializer.save()
             info["obj"] = serializer.data
