@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from posts.models import PostModel
-from posts.serializers import PostSerializer
+from posts.models import FileModel, PostModel
+from posts.serializers import FileSerializer, PostSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -33,14 +33,30 @@ class CreateApi( APIView ):
         }
 
         post = request.data
+        serializer = PostSerializer( data=post, request=request )
         
-        serializer = PostSerializer( data=post )
-        # print(serializer.is_valid(  ))
-        # print(serializer.errors)
         if serializer.is_valid(  ):
             info["obj"] = serializer.save()
+            slides = serializer.save_slides()
             info["obj"] = serializer.data
-        else:
+            file_Serializer = FileSerializer(slides, many=True)
+            info["slides"] = file_Serializer.data
+
+            # slides = post.getlist('slides')
+
+            # if len(slides):
+            #     for slide in slides:
+            #         query = {
+            #             "type" : "posts",
+            #             "type_id" : info["obj"]["post_id"],
+            #             "path" : slide,
+            #         }
+            #         file_serializer = FileSerializer(data=query)
+
+            #         if file_serializer.is_valid():
+            #             file_serializer.save()
+            #             info["slides"].append( file_serializer.data )
+        else:           
             info["error"] = serializer.errors()
         
         return info
@@ -57,6 +73,8 @@ class EditApi( APIView ):
         serializer = PostSerializer(query)
 
         info["obj"] = serializer.data
+
+        info["obj"]["slides"] = FileSerializer(query.slides(), many=True).data
 
         return Response(info)
 
