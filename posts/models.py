@@ -2,6 +2,34 @@ from django.db import models
 import datetime
 
 # Create your models here.
+class PostQuerySet(models.QuerySet):
+    def search_name( self, value ):
+        return self.filter(name__icontains=value)
+
+    def pk( self, value ):
+        return self.filter(pk=value)
+        
+# class PostManager(models.Manager):
+#     def get_queryset(self):
+#         print("self._db", self._db)
+#         return PostQuerySet(self.model, using=self._db)
+
+#     def search_name( self, value ):
+#         return self.get_queryset().search_name(value)
+
+#     def pk( self, value ):
+#         return self.get_queryset().pk(value)
+        
+# class PostManager(models.Manager):
+#     def get_queryset(self):
+#         return models.QuerySet(self.model, using=self._db)
+
+#     def search_name( self, value ):
+#         return self.filter(name__icontains=value)
+
+#     def pk( self, value ):
+#         return self.filter(pk=value)
+
 class PostModel(models.Model):
     post_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -9,6 +37,9 @@ class PostModel(models.Model):
     featured_image = models.CharField( max_length=255, null=True)
     created_at = models.DateTimeField(auto_now=datetime.datetime.now(), null=True)
     updated_at = models.DateTimeField(auto_now_add=datetime.datetime.now(), null=True)
+
+    objects = PostQuerySet().as_manager()
+    
     class Meta():
         db_table = "posts"
 
