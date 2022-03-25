@@ -1,6 +1,17 @@
 from django.db import models
 import datetime
 
+class BaseModel( models.Model ):
+
+    class Meta:
+        abstract = True
+
+    def fill( self, **query ):
+        for key, value in query.items():
+            self.__setattr__( key, value )
+            
+        return self
+        
 # Create your models here.
 class PostQuerySet(models.QuerySet):
     def search_name( self, value ):
@@ -30,7 +41,7 @@ class PostQuerySet(models.QuerySet):
 #     def pk( self, value ):
 #         return self.filter(pk=value)
 
-class PostModel(models.Model):
+class PostModel(BaseModel):
     post_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     content = models.TextField(null=True)
@@ -43,15 +54,9 @@ class PostModel(models.Model):
     class Meta():
         db_table = "posts"
 
-    def fill( self, **query ):
-        for key, value in query.items():
-            self.__setattr__( key, value )
-            
-        return self
-
     def slides(self):
         return FileModel.objects.filter(type="posts", type_id=self.pk)
-class FileModel(models.Model):
+class FileModel(BaseModel):
     file_id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=255)
     type_id = models.IntegerField()
@@ -60,9 +65,3 @@ class FileModel(models.Model):
     updated_at = models.DateTimeField(auto_now_add=datetime.datetime.now(), null=True)
     class Meta():
         db_table = "files"
-
-    def fill( self, **query ):
-        for key, value in query.items():
-            self.__setattr__( key, value )
-            
-        return self

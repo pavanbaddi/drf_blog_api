@@ -1,5 +1,5 @@
 from django.urls import path
-from posts import views
+from comments import views
 
 urlpatterns = [
     path('', views.ListApi.as_view()),
