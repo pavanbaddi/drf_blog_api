@@ -4,6 +4,8 @@ from comments.serializers import CommentSerializer
 from posts.models import PostModel
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.contrib.auth.models import User
+
 # Create your views here.
 class ListApi( APIView ):
 
@@ -12,11 +14,23 @@ class ListApi( APIView ):
             "list" : []
         }
 
-        query = CommentModel.objects.posts(request.GET.get("post_id")).order_by("-comment_id")
+        query = CommentModel.objects.strainer(request.GET).order_by("-comment_id")
 
         serializer = CommentSerializer(query, many=True)
 
         info["list"] = serializer.data
+
+        # for item in info["list"]:
+        #     user = User.objects.filter(id=item["user_id"]).first()
+        #     print(user)
+        #     if user:
+        #         item.update({
+        #             "user" : {
+        #                 "first_name" : user.first_name,
+        #                 "last_name" : user.last_name,
+        #                 "email" : user.email,
+        #             }
+        #         })
 
         return Response(info)
 
@@ -32,7 +46,9 @@ class CreateApi( APIView ):
         }
 
         post = request.data
-        serializer = CommentSerializer( data=post, request=request )
+        serializer = CommentSerializer( data=post, context={
+            'request': request
+        } )
         
         if serializer.is_valid(  ):
             info["obj"] = serializer.save()

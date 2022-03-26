@@ -10,6 +10,21 @@ class CommentQuerySet(models.QuerySet):
     def posts( self, value ):
         return self.filter(post=value)
 
+
+    def strainer( self, kwargs ):
+        query = self
+
+        if kwargs.get("post_id"):
+            query = self.posts(kwargs["post_id"])
+
+        if kwargs.get("user_id"):
+            query = self.filter(user_id=kwargs["user_id"])
+
+        if kwargs.get("comment_id"):
+            query = self.filter(comment_id=kwargs["comment_id"])
+
+        return query
+
     # def order_by( self, value ):
     #     return self.filter(post=value)
 

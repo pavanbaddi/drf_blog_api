@@ -12,11 +12,16 @@ class CommentSerializer( serializers.Serializer ):
     created_at = serializers.DateTimeField( required=False )
     updated_at = serializers.DateTimeField( required=False )
 
-    instance = None
-    request = None
+    user = serializers.SerializerMethodField()
 
+    instance = None
+    class Meta:
+        extra_kwargs = {
+            "updated_at" : {
+                "write_only" : True
+            }
+        }
     def __init__(self, *args, **kwargs):
-        self.request = kwargs.pop('request') if kwargs.get('request') else None
         super(CommentSerializer, self).__init__(*args, **kwargs)
 
     def validate_user_id( self, value ):
@@ -38,13 +43,12 @@ class CommentSerializer( serializers.Serializer ):
     @property
     def data(self):
         data = super(CommentSerializer, self).data
-        
         if self.instance:
             data.update({
                 "comment_id" : self.instance.pk,
                 "created_at" : self.instance.created_at,
                 "updated_at" : self.instance.updated_at,
-            }) 
+            })
 
         return data
 
@@ -66,3 +70,24 @@ class CommentSerializer( serializers.Serializer ):
         )
         
         return self.instance
+
+    def get_user(self, obj):
+        return UserSerializer(obj.user).data if obj.user else {}
+
+class UserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        # fields = ["id", "first_name", "last_name", "email"]
+        fields = "__all__"
+        extra_kwargs = {
+            "password" : {
+                "write_only" : True
+            },
+            "groups" : {
+                "write_only" : True
+            },
+            "user_permissions" : {
+                "write_only" : True
+            }
+        }
