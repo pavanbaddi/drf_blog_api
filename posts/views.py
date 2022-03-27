@@ -57,7 +57,7 @@ class CreateApi( APIView ):
             #             file_serializer.save()
             #             info["slides"].append( file_serializer.data )
         else:           
-            info["error"] = serializer.errors()
+            info["error"] = serializer.errors
         
         return info
 

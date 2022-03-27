@@ -1,5 +1,6 @@
 from django.db import models
 import datetime
+from django.contrib.auth.models import User
 
 class BaseModel( models.Model ):
 
@@ -46,6 +47,7 @@ class PostModel(BaseModel):
     name = models.CharField(max_length=255)
     content = models.TextField(null=True)
     featured_image = models.CharField( max_length=255, null=True)
+    meta_data = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now=datetime.datetime.now(), null=True)
     updated_at = models.DateTimeField(auto_now_add=datetime.datetime.now(), null=True)
 
@@ -56,6 +58,14 @@ class PostModel(BaseModel):
 
     def slides(self):
         return FileModel.objects.filter(type="posts", type_id=self.pk)
+
+    def get_meta_data(self):
+        user_id  = self.meta_data.get("user_id") if self.meta_data else None
+        if user_id:
+            user = User.objects.filter(id=user_id).first()
+            self.meta_data["user"] = UserSerializer(user).data if user else None
+
+        return self.meta_data
 class FileModel(BaseModel):
     file_id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=255)
@@ -65,3 +75,5 @@ class FileModel(BaseModel):
     updated_at = models.DateTimeField(auto_now_add=datetime.datetime.now(), null=True)
     class Meta():
         db_table = "files"
+
+from comments.serializers import UserSerializer
