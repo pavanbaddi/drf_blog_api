@@ -1,6 +1,8 @@
+from json import JSONEncoder
 from django.db import models
 import datetime
 from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
 
 class BaseModel( models.Model ):
 
@@ -14,44 +16,56 @@ class BaseModel( models.Model ):
         return self
         
 # Create your models here.
-class PostQuerySet(models.QuerySet):
-    def search_name( self, value ):
+class PostQuerySet( models.QuerySet ):
+
+    def search_name(self, value):
         return self.filter(name__icontains=value)
 
-    def pk( self, value ):
-        return self.filter(pk=value)
+    def is_active(self, value=1):
+        return self.filter(is_active=value)
         
+    def is_active(self, value=1):
+        return self.filter(is_active=value)
+
 # class PostManager(models.Manager):
 #     def get_queryset(self):
-#         print("self._db", self._db)
 #         return PostQuerySet(self.model, using=self._db)
 
-#     def search_name( self, value ):
+#     def search_name(self, value):
 #         return self.get_queryset().search_name(value)
 
-#     def pk( self, value ):
-#         return self.get_queryset().pk(value)
+#     def is_active(self, value=1):
+#         return self.get_queryset().is_active(value)
+
+class BaseModelJSONEncoder(JSONEncoder):
+
+    def default(self, o):
         
-# class PostManager(models.Manager):
-#     def get_queryset(self):
-#         return models.QuerySet(self.model, using=self._db)
+        try:
+            if isinstance(o, models.Model):
+                return model_to_dict(o)
+            elif isinstance(o, models.query.QuerySet):
+                return [ model_to_dict(obj) for obj in o ]
+            else:
+                iterable = iter(o)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, o)
 
-#     def search_name( self, value ):
-#         return self.filter(name__icontains=value)
 
-#     def pk( self, value ):
-#         return self.filter(pk=value)
-
-class PostModel(BaseModel):
+class PostModel( models.Model ):
     post_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     content = models.TextField(null=True)
+    is_active = models.IntegerField(default=1)
     featured_image = models.CharField( max_length=255, null=True)
     meta_data = models.JSONField(null=True)
     created_at = models.DateTimeField(auto_now=datetime.datetime.now(), null=True)
     updated_at = models.DateTimeField(auto_now_add=datetime.datetime.now(), null=True)
 
-    objects = PostQuerySet().as_manager()
+    # objects = PostQuerySet.as_manager()
     
     class Meta():
         db_table = "posts"
@@ -66,6 +80,15 @@ class PostModel(BaseModel):
             self.meta_data["user"] = UserSerializer(user).data if user else None
 
         return self.meta_data
+
+    # def __str__(self):
+    #     print("__str__ called")
+
+    # def __repr__(self):
+    #     print("__repr__ called")
+
+    # def default(self, obj):
+    #     print("inside default")
 class FileModel(BaseModel):
     file_id = models.AutoField(primary_key=True)
     type = models.CharField(max_length=255)

@@ -1,9 +1,14 @@
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
-from posts.models import FileModel, PostModel
+from posts.models import BaseModelJSONEncoder, PostModel
+from rest_framework.response import Response
+from django.forms.models import model_to_dict
 from posts.serializers import FileSerializer, PostSerializer
 from rest_framework.views import APIView
-from rest_framework.response import Response
+import json
+from itertools import chain
+
+from django.core import serializers
 
 # Create your views here.
 class ListApi( APIView ):
@@ -64,11 +69,18 @@ class CreateApi( APIView ):
 class EditApi( APIView ):
 
     def get(self, request, pk):
+
         info = {
             "obj" : None
         }
 
         query = PostModel.objects.get(pk=pk)
+        # return HttpResponse(json.dumps(PostModel.objects.all(), cls=BaseModelJSONEncoder))
+
+        print(model_to_dict(query))
+        # breakpoint()
+        # p = json.dumps(query, cls=BaseModelJSONEncoder)
+
 
         serializer = PostSerializer(query)
 
@@ -76,7 +88,9 @@ class EditApi( APIView ):
 
         info["obj"]["slides"] = FileSerializer(query.slides(), many=True).data
 
-        return Response(info)
+        d = serializers.serialize("jsonl", PostModel.objects.all())
+        # return HttpResponse(d)
+        # return Response(model_to_dict(query))
 
 class DeleteApi( APIView ):
 
